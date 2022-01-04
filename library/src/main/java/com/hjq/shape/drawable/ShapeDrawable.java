@@ -1,6 +1,7 @@
 package com.hjq.shape.drawable;
 
 import android.annotation.SuppressLint;
+import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -20,15 +21,15 @@ import android.support.v4.graphics.ColorUtils;
 import android.view.View;
 
 /**
- *    author : Android 轮子哥
- *    github : https://github.com/getActivity/ShapeView
- *    time   : 2021/08/14
- *    desc   : 在 {@link android.graphics.drawable.GradientDrawable} 的基础上改造
+ * author : Android 轮子哥
+ * github : https://github.com/getActivity/ShapeView
+ * time   : 2021/08/14
+ * desc   : 在 {@link android.graphics.drawable.GradientDrawable} 的基础上改造
  */
 public class ShapeDrawable extends Drawable {
 
     private ShapeState mShapeState;
-    
+
     private final Paint mFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Rect mPadding;
     private Paint mStrokePaint;   // optional, set by the caller
@@ -49,7 +50,7 @@ public class ShapeDrawable extends Drawable {
     public ShapeDrawable() {
         this(new ShapeState());
     }
-    
+
     public ShapeDrawable(ShapeState state) {
         mShapeState = state;
         initializeWithState(state);
@@ -82,7 +83,7 @@ public class ShapeDrawable extends Drawable {
     /**
      * 设置 Shape 形状
      *
-     * @param shape         Shape 形状类型
+     * @param shape Shape 形状类型
      */
     public ShapeDrawable setShape(int shape) {
         mRingPath = null;
@@ -95,8 +96,8 @@ public class ShapeDrawable extends Drawable {
     /**
      * 设置 Shape 大小
      *
-     * @param width         Shape 宽度
-     * @param height        Shape 高度
+     * @param width  Shape 宽度
+     * @param height Shape 高度
      */
     public ShapeDrawable setSize(int width, int height) {
         mShapeState.setSize(width, height);
@@ -109,7 +110,7 @@ public class ShapeDrawable extends Drawable {
      * 指定渐变角的半径。 如果这 > 0，则可绘制对象将绘制在圆角矩形中，而不是矩形中。 仅当形状为RECTANGLE类型时才使用此属性。
      * 注意：更改此属性将影响从资源加载的可绘制对象的所有实例。 建议在更改此属性之前调用mutate() 。
      *
-     * @param radius       矩形角的半径（以像素为单位）
+     * @param radius 矩形角的半径（以像素为单位）
      */
     public ShapeDrawable setRadius(float radius) {
         mShapeState.setCornerRadius(radius);
@@ -123,7 +124,7 @@ public class ShapeDrawable extends Drawable {
             return setRadius(topLeftRadius);
         }
         // 为 4 个角中的每一个指定半径，对于每个角，该数组包含 2 个值 [X_radius, Y_radius]，角的顺序是左上角、右上角、右下角、左下角
-        mShapeState.setCornerRadii(new float[] {
+        mShapeState.setCornerRadii(new float[]{
                 topLeftRadius, topLeftRadius, topRightRadius, topRightRadius,
                 bottomRightRadius, bottomRightRadius, bottomLeftRadius, bottomLeftRadius});
         mPathIsDirty = true;
@@ -186,7 +187,7 @@ public class ShapeDrawable extends Drawable {
         mStrokePaint.setStrokeWidth(width);
         mStrokePaint.setColor(color);
 
-        mStrokePaint.setPathEffect(dashWidth > 0 ? new DashPathEffect(new float[] {dashWidth, dashGap}, 0) : null);
+        mStrokePaint.setPathEffect(dashWidth > 0 ? new DashPathEffect(new float[]{dashWidth, dashGap}, 0) : null);
         invalidateSelf();
         return this;
     }
@@ -239,10 +240,9 @@ public class ShapeDrawable extends Drawable {
      * {@link #mutate()} before changing this property.</p>
      *
      * @param useLevel True if this drawable should honor its level, false otherwise
-     *
      * @see #mutate()
-     * @see #setLevel(int) 
-     * @see #getLevel() 
+     * @see #setLevel(int)
+     * @see #getLevel()
      */
     public ShapeDrawable setUseLevel(boolean useLevel) {
         mShapeState.mUseLevel = useLevel;
@@ -250,7 +250,7 @@ public class ShapeDrawable extends Drawable {
         invalidateSelf();
         return this;
     }
-    
+
     /**
      * 设置渐变角度
      */
@@ -384,10 +384,6 @@ public class ShapeDrawable extends Drawable {
      * 将当前 Drawable 应用到 View 背景
      */
     public void intoBackground(View view) {
-        if (mShapeState.mStrokeDashGap > 0 || mShapeState.mShadowSize > 0) {
-            // 需要关闭硬件加速，否则虚线或者阴影在某些手机上面无法生效
-            view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-        }
         view.setBackground(this);
     }
 
@@ -417,8 +413,8 @@ public class ShapeDrawable extends Drawable {
             fill+stroke. Otherwise we can just draw the stroke (if any) on top
             of the fill (if any) without worrying about blending artifacts.
          */
-         final boolean useLayer = haveStroke && haveFill && st.mShapeType != ShapeType.LINE &&
-                 currStrokeAlpha < 255 && (mAlpha < 255 || mColorFilter != null);
+        final boolean useLayer = haveStroke && haveFill && st.mShapeType != ShapeType.LINE &&
+                currStrokeAlpha < 255 && (mAlpha < 255 || mColorFilter != null);
 
         /*  Drawing with a layer is slower than direct drawing, but it
             allows us to apply paint effects like alpha and colorfilter to
@@ -486,9 +482,11 @@ public class ShapeDrawable extends Drawable {
             if (ColorUtils.setAlphaComponent(mShapeState.mShadowColor, 255) == mShapeState.mShadowColor) {
                 shadowColor = ColorUtils.setAlphaComponent(mShapeState.mShadowColor, 254);
             }
-
-            mShadowPaint.setShadowLayer(mShapeState.mShadowSize, mShapeState.mShadowOffsetX,
-                    mShapeState.mShadowOffsetY, shadowColor);
+            mShadowPaint.setMaskFilter(new BlurMaskFilter(mShapeState.mShadowSize, BlurMaskFilter.Blur.NORMAL));
+            mShadowPaint.setColor(shadowColor);
+            mShadowPaint.setAntiAlias(true);
+//            mShadowPaint.setShadowLayer(mShapeState.mShadowSize, mShapeState.mShadowOffsetX,
+//                    mShapeState.mShadowOffsetY, shadowColor);
 
         } else {
             if (mShadowPaint != null) {
@@ -588,7 +586,7 @@ public class ShapeDrawable extends Drawable {
         int scale = mAlpha + (mAlpha >> 7);
         return alpha * scale >> 8;
     }
-    
+
     @Override
     public int getChangingConfigurations() {
         return super.getChangingConfigurations() | mShapeState.mChangingConfigurations;
@@ -703,6 +701,7 @@ public class ShapeDrawable extends Drawable {
      * This checks mRectIsDirty, and if it is true, recomputes both our drawing
      * rectangle (mRect) and the gradient itself, since it depends on our
      * rectangle too.
+     *
      * @return true if the resulting rectangle is not empty, false otherwise
      */
     private boolean ensureValidRect() {
@@ -711,7 +710,7 @@ public class ShapeDrawable extends Drawable {
 
             Rect bounds = getBounds();
             float inset = 0;
-            
+
             if (mStrokePaint != null) {
                 inset = mStrokePaint.getStrokeWidth() * 0.5f;
             }
@@ -719,7 +718,7 @@ public class ShapeDrawable extends Drawable {
             final ShapeState st = mShapeState;
 
             mRect.set(bounds.left + inset + mShapeState.mShadowSize, bounds.top + inset + mShapeState.mShadowSize,
-                      bounds.right - inset - mShapeState.mShadowSize, bounds.bottom - inset - mShapeState.mShadowSize);
+                    bounds.right - inset - mShapeState.mShadowSize, bounds.bottom - inset - mShapeState.mShadowSize);
 
             final int[] colors = st.mGradientColors;
             if (colors != null) {
@@ -727,40 +726,56 @@ public class ShapeDrawable extends Drawable {
                 float x0, x1, y0, y1;
 
                 if (st.mGradientType == ShapeGradientType.LINEAR_GRADIENT) {
-                    final float level = st.mUseLevel ? (float) getLevel() / 10000.0f : 1.0f;                    
+                    final float level = st.mUseLevel ? (float) getLevel() / 10000.0f : 1.0f;
                     switch (st.mGradientOrientation) {
-                    case TOP_BOTTOM:
-                        x0 = r.left;            y0 = r.top;
-                        x1 = x0;                y1 = level * r.bottom;
-                        break;
-                    case TR_BL:
-                        x0 = r.right;           y0 = r.top;
-                        x1 = level * r.left;    y1 = level * r.bottom;
-                        break;
-                    case RIGHT_LEFT:
-                        x0 = r.right;           y0 = r.top;
-                        x1 = level * r.left;    y1 = y0;
-                        break;
-                    case BR_TL:
-                        x0 = r.right;           y0 = r.bottom;
-                        x1 = level * r.left;    y1 = level * r.top;
-                        break;
-                    case BOTTOM_TOP:
-                        x0 = r.left;            y0 = r.bottom;
-                        x1 = x0;                y1 = level * r.top;
-                        break;
-                    case BL_TR:
-                        x0 = r.left;            y0 = r.bottom;
-                        x1 = level * r.right;   y1 = level * r.top;
-                        break;
-                    case LEFT_RIGHT:
-                        x0 = r.left;            y0 = r.top;
-                        x1 = level * r.right;   y1 = y0;
-                        break;
-                    default:/* TL_BR */
-                        x0 = r.left;            y0 = r.top;
-                        x1 = level * r.right;   y1 = level * r.bottom;
-                        break;
+                        case TOP_BOTTOM:
+                            x0 = r.left;
+                            y0 = r.top;
+                            x1 = x0;
+                            y1 = level * r.bottom;
+                            break;
+                        case TR_BL:
+                            x0 = r.right;
+                            y0 = r.top;
+                            x1 = level * r.left;
+                            y1 = level * r.bottom;
+                            break;
+                        case RIGHT_LEFT:
+                            x0 = r.right;
+                            y0 = r.top;
+                            x1 = level * r.left;
+                            y1 = y0;
+                            break;
+                        case BR_TL:
+                            x0 = r.right;
+                            y0 = r.bottom;
+                            x1 = level * r.left;
+                            y1 = level * r.top;
+                            break;
+                        case BOTTOM_TOP:
+                            x0 = r.left;
+                            y0 = r.bottom;
+                            x1 = x0;
+                            y1 = level * r.top;
+                            break;
+                        case BL_TR:
+                            x0 = r.left;
+                            y0 = r.bottom;
+                            x1 = level * r.right;
+                            y1 = level * r.top;
+                            break;
+                        case LEFT_RIGHT:
+                            x0 = r.left;
+                            y0 = r.top;
+                            x1 = level * r.right;
+                            y1 = y0;
+                            break;
+                        default:/* TL_BR */
+                            x0 = r.left;
+                            y0 = r.top;
+                            x1 = level * r.right;
+                            y1 = level * r.bottom;
+                            break;
                     }
 
                     mFillPaint.setShader(new LinearGradient(x0, y0, x1, y1,
@@ -825,7 +840,7 @@ public class ShapeDrawable extends Drawable {
     public int getIntrinsicHeight() {
         return mShapeState.mHeight;
     }
-    
+
     @Override
     public ConstantState getConstantState() {
         mShapeState.mChangingConfigurations = getChangingConfigurations();

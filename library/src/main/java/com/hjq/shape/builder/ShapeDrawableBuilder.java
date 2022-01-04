@@ -594,10 +594,6 @@ public final class ShapeDrawableBuilder {
         if (drawable == null) {
             return;
         }
-        if (isDashLineEnable() || isShadowEnable()) {
-            // 需要关闭硬件加速，否则虚线或者阴影在某些手机上面无法生效
-            mView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-        }
         mView.setBackground(drawable);
     }
 }
